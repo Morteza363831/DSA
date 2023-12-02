@@ -3,59 +3,207 @@ package bignumber;
 import java.util.Scanner;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 public class BigNumber {
     // == constants ==
     static Scanner input = new Scanner(System.in);
-    static BigInteger num1 = new BigInteger(input.nextLine()); 
-    static BigInteger num2 = new BigInteger(input.nextLine());
-    static String s1 = num1.toString();
-    static String s2= num2.toString();
-    static int[] arr1= new int[s1.length()];
-    static int[] arr2= new int[s2.length()];
+    static int[] arr1;
     static List<Integer> result= new ArrayList<>();
     static List<Integer> indexes= new ArrayList<>();
     static int temp= 0;
+    static int sign1 = 0;
+    static int sign2 = 0;
+    
+    
+    static byte[] copy;
+    
+    // == init constants ==
+    String number = "0";
+    byte[] digits;
+    int sign;
+    boolean flag;
+    
+    // == encapsulate number 
+    
     
     // == constructor ==
-    public BigNumber() {
-        // == convert big numbers to arrays ==
-        for (int i = 0; i<s1.length(); i++) {
-            arr1[i] = Integer.parseInt(s1.charAt(i) + "");
+    public BigNumber(String num) {
+        this.number = num;
+       
+        sign = 0;
+        // == chack the sign of nummber ==
+        if (this.number.charAt(0) == '-') {
+            this.number = this.number.substring(1);
+            
+            this.sign = 9;
         }
-        for (int i = 0; i<s2.length(); i++) {
-            arr2[i] = Integer.parseInt(s2.charAt(i) + "");
+        else if (this.number.charAt(0) == '+'){
+            this.number = this.number.substring(1);
+            
+            this.sign = 0;
         }
+        else {
+            this.number = this.number.substring(0);
+            
+            this.sign = 0;
+        }
+        
+    }
+    public String getNumber() {
+        return number;
+    }
+    public int getSign(){
+        return sign;
+    }
+    public byte[] getDigits(){
+        return digits;
+    }
+    
+   
+    
+    public void numberLength(BigNumber other) {
+         // == init constants ==
+        
+        flag = false;
+        if (this.number.charAt(0) == '-') {
+            this.number = this.number.substring(1);
+            
+            this.sign = 9;
+        }
+        else if (this.number.charAt(0) == '+'){
+            this.number = this.number.substring(1);
+            
+            this.sign = 0;
+        }
+        if (this.number.length() > other.number.length()) {
+            other.number = "0".repeat(this.number.length()-other.number.length()) + other.number;
+            // == add chars to digits array ==
+            this.digits = new byte[this.number.length()];
+            other.digits = new byte[other.number.length()];
+            for (int i = 0; i<this.digits.length ; i++) {
+                this.digits[this.number.length()-1-i] = Byte.parseByte(this.number.charAt(i) + "");
+                other.digits[other.number.length()-1-i] = Byte.parseByte(other.number.charAt(i) + "");
+            }
+            flag = true; // first input number is greater
+        }
+        else if (this.number.length() == other.number.length()) {
+            other.number = "0".repeat(this.number.length()-other.number.length()) + other.number;
+            // == add chars to digits array ==
+            this.digits = new byte[this.number.length()];
+            other.digits = new byte[other.number.length()];
+            for (int i = 0; i<this.digits.length ; i++) {
+                this.digits[this.number.length()-1-i] = Byte.parseByte(this.number.charAt(i) + "");
+                other.digits[other.number.length()-1-i] = Byte.parseByte(other.number.charAt(i) + "");
+            }
+            flag = true; // first input number is greater
+            for (int i = 0; i<this.number.length(); i++) {
+                if (this.number.charAt(i) > other.number.charAt(i)) {
+                    flag = true;
+                    break;
+                }
+                else if (this.number.charAt(i) == other.number.charAt(i)) {
+                    continue;
+                }
+                else {
+                    this.number = "0".repeat(other.number.length()-this.number.length()) + this.number;
+                    // == add chars to digits array ==
+                    this.digits = new byte[this.number.length()];
+                    other.digits = new byte[other.number.length()];
+                    for (int j = 0; j<this.digits.length ; j++) {
+                        this.digits[this.number.length()-1-j] = Byte.parseByte(this.number.charAt(j) + "");
+                        other.digits[other.number.length()-1-j] = Byte.parseByte(other.number.charAt(j) + "");
+                    }
+                    flag = false;
+                    copy = this.digits;
+                    this.digits = other.digits;
+                    other.digits = copy;
+                        }
+            }
+            
+        }
+        else {
+            this.number = "0".repeat(other.number.length()-this.number.length()) + this.number;
+            // == add chars to digits array ==
+            this.digits = new byte[this.number.length()];
+            other.digits = new byte[other.number.length()];
+            for (int i = 0; i<this.digits.length ; i++) {
+                this.digits[this.number.length()-1-i] = Byte.parseByte(this.number.charAt(i) + "");
+                other.digits[other.number.length()-1-i] = Byte.parseByte(other.number.charAt(i) + "");
+            }
+            flag = false; // secont input number is greater
+            copy = this.digits;
+            this.digits = other.digits;
+            other.digits = copy;
+        }
+        
+        
+        
     }
     
     // == sum method ==
-    public static void sum(BigInteger num1, BigInteger num2) {
+    public String sum(BigNumber other) {
+        numberLength(other);
+        StringBuilder sum = new StringBuilder();
+        // == reset result list and temp ==
+        result.removeAll(result);
         temp = 0;
-        for (int i = arr1.length-1; i>=0; i--) {
-            result.add((arr1[i]+arr2[i]+temp)%10);
-            temp = (arr1[i]+arr2[i]+ temp)/10;
-            if (i == 0) {
-                result.add((arr1[i]+arr2[i])/10);
+        // == sum of to big number ==
+        for (int i = 0; i<this.digits.length; i++) {
+            // == it continues until arr2 indexes end ! ==
+            if (i < other.digits.length) {
+                result.add((this.digits[i]+other.digits[i]+temp)%10);
+                temp = (this.digits[i]+other.digits[i]+ temp)/10;
+                if (i == this.digits.length-1) {
+                    result.add((this.digits[i]+other.digits[i] + temp)/10);
+                }
+            }
+            // == it continues until arr 1 indexes end
+            else {
+                result.add(this.digits[i] + temp);
+                temp = 0;
             }
         }
+        
+        // == add data on result list to sumResult string ! ==
+        if (this.sign + other.sign == 18) {
+                System.out.print('-');
+            }
+            else if (this.sign+other.sign == 0) {
+                System.out.print('+');
+            }
+            
+        
         Collections.reverse(result);
         for (int digit : result) {
-            System.out.print(digit);
+            sum.append(digit + "");
         }
-        System.out.println();
+        
+        
+        // == return sum ==
+        return sum.toString();
     }
     
     
     // minus method ==
-    public static void minus(BigInteger num1, BigInteger num2) {
+    public String subtract(BigNumber other) {
+        numberLength(other);
+        // == create string builder to return minus ==
+        StringBuilder minus = new StringBuilder();
+        // == reset result list ==
         result.removeAll(result);
         int borrow = 0;
-
-        for (int i = s1.length() - 1; i >= 0; i--) {
-            int diff = (s1.charAt(i)) - borrow - (s2.charAt(i));
+        // == numbers must have same length ==
+        
+        // == find minus of to big numbers ==
+        for (int i = 0; i < this.digits.length; i++) {
+            int diff = (this.digits[i] - borrow - other.digits[i]);
             if (diff < 0) {
                 diff += 10;
+                if (i == this.digits.length - 1 && diff == -1){
+                    diff = 0;
+                }
                 borrow = 1;
             } else {
                 borrow = 0;
@@ -63,58 +211,58 @@ public class BigNumber {
             result.add(0, diff);
         }
         
+        // == add data on result list ==
+        if (this.sign + other.sign == 18) {
+            if (flag) {
+                minus.append("-");
+            }
+            else {
+                minus.append("+");
+            }
+        }
+        else if (this.sign+other.sign == 0) {
+            if (flag) {
+            minus.append("+");
+            }
+            else {
+                minus.append("-");
+            }
+        }
+        if (other.sign == 9 && this.sign == 0) {
+            minus.append(this.sum(other));
+            return minus.toString();
+        }
+        else if (other.sign == 0 && this.sign == 9) {
+            minus.append("-");
+            minus.append(this.sum(other));
+            return minus.toString();
+        }
+        
+        
         for (int digit : result) {
-            System.out.print(digit);
+            minus.append(digit + "");
         }
-        System.out.println();
+        return minus.toString();
     }
     
-     // == multiply method ==
-    public static void multiply(BigInteger num1, BigInteger num2) {
+     
+    public String mult(BigNumber other) {
+        numberLength(other);
+        // == it return multiply of two big number ==
+        StringBuilder multiply = new StringBuilder();
+        // == reset result list ==
         result.removeAll(result);
-        for (int i = arr1.length-1; i>=0; i--) {
-            indexes.add(arr1.length-i-1, arr2[i]);
-            
-            while(!num1.equals(0)) {
-                indexes.set(arr1.length-i-1, indexes.get(arr1.length-i-1) + arr2[i]);
-                num1 = num1.subtract(BigInteger.valueOf(1));
-            }
-        }
-        int count = 0;
-        while (true) {
-            if (count <=indexes.size()-1) {
-                result.add((indexes.get(count)+temp)%10);
-                temp = (indexes.get(count)+temp)/10;
-                count++;
-            }
-            else{
-                result.add(temp%10);
-                temp = (temp)/10;
-                if (temp/10 <10) {
-                    result.add(temp);
-                break;
-                }
-            } 
-        } 
-        Collections.reverse(result);
-        for (int i = 0; i<result.size(); i++) {
-            System.out.print(result.get(i));
-        }
-        System.out.println();
-    }
-    
-    public static void multiplySecondWay(BigInteger num1, BigInteger num2) {
-        result.removeAll(result);
-        int len1 = s1.length();
-        int len2 = s2.length();
+        // == get numbers length ==
+        int len1 = this.number.length();
+        int len2 = this.number.length();
         int[] product = new int[len1 + len2];
 
-        // Multiply each digit and store the result in the product array
+        // == Multiply each digit and store the result in the product array ==
         for (int i = len1 - 1; i >= 0; i--) {
             int carry = 0;
-            int n1 = s1.charAt(i) - '0';
+            int n1 = this.number.charAt(i) - '0';
             for (int j = len2 - 1; j >= 0; j--) {
-                int n2 = s2.charAt(j) - '0';
+                int n2 = other.number.charAt(j) - '0';
                 int sum = n1 * n2 + product[i + j + 1] + carry;
                 product[i + j + 1] = sum % 10;
                 carry = sum / 10;
@@ -122,79 +270,295 @@ public class BigNumber {
             product[i] += carry;
         }
 
-        // Convert the product array to a list of integers
+        // == Convert the product array to a list of integers ==
         for (int digit : product) {
             result.add(digit);
         }
 
-        // Remove leading zeros
+        // == Remove leading zeros ==
         while (!result.isEmpty() && result.get(0) == 0) {
             result.remove(0);
         }
 
-        // Print the result
-        for (int digit : result) {
-            System.out.print(digit);
+        // ==  add data from result list to multiply string ==
+        if (sign1 + sign2 == 0) {
+            multiply.append("+");
         }
-        System.out.println();
+        else if (sign1 + sign2 == 18){
+            multiply.append("+");
+        }
+        else {
+            multiply.append("-");
+        }
+        
+        for (int digit : result) {
+            multiply.append(digit + "");
+        }
+        
+        // == return multiply string as result ==
+        return multiply.toString();
     }
     
-    public static void divide(BigInteger num1 , BigInteger num2) {
+    public String divide(BigNumber other) {
+        numberLength(other);
+        // == divide string wil return result ==
+        StringBuilder divide = new StringBuilder();
+        // == reset result list ==
         result.removeAll(result);
-        temp = 0;
-        result= new ArrayList<>(Collections.nCopies(num1.toString().length() + num2.toString().length() + 2, 0));
+        // == init it again ==
+        List<Integer> result2 = new ArrayList<>(Collections.nCopies(this.digits.length, 0));
+        int counter = 0;
         
-        
-        while (true) {
-            if (num1.compareTo(num2) < 0) {
-                break;
-            }
-            else {
-                result.set(0, result.get(0)+1);
+        while (!isNegative(other) || this.subtract(other).equals("0")) {
             
-                for (int i = 0; i<result.size(); i++) { // inner for
-                    if (result.get(i) >= 10) {
-                        result.set(i, 0);
-                            result.set(i+1, result.get(i+1)+1);
+                System.out.println(result2);
+                result2.set(0, result2.get(0)+1);
+            
+                for (int i = 0; i<result2.size(); i++) { // inner for
+                    if (result2.get(i) >= 10) {
+                        result2.set(i, 0);
+                        result2.set(i+1, result2.get(i+1)+1);
                     }
                 }// inner for
-                num1 = num1.subtract(num2);
-            }             
+                this.number = this.subtract(other);
+                       
         }
         
-        Collections.reverse(result);
-        for (int digit : result) {
-            System.out.print(digit);
+        // == add result list to divide string ==
+        if (sign1 + sign2 == 0) {
+            divide.append("+");
         }
-        System.out.println();
+        else if (sign1 + sign2 == 18){
+            divide.append("+");
+        }
+        else {
+            divide.append("-");
+        }
+        
+        Collections.reverse(result2);
+        for (int digit : result2) {
+            divide.append(digit + "");
+        }
+        return divide.toString();
     }
     
     
+    public static char findFirstNonZero(String str) {
+        for (char c : str.toCharArray()) {
+            if (c != '0') {
+                return c;
+            }
+        }
+        return '0'; // Return '0' if no non-zero character is found
+    }
+
+    private boolean isNegative(BigNumber other) {
+        BigNumber in = new BigNumber(this.number);
+        if (in.subtract(other).charAt(0) == '-') {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+   
+    public String divide3(BigNumber other) {
+        int BASE = 10000;
+        String dividend = this.number;
+        String divisor = other.number;
+
+        int[] dividendArr = convertToBase(dividend);
+        int[] divisorArr = convertToBase(divisor);
+
+        StringBuilder quotient = new StringBuilder();
+        int[] remainder = new int[dividendArr.length];
+        int remainderLen = 0;
+        for (int i = dividendArr.length - 1; i >= 0; i--) {
+            int temp = remainder[0] * BASE + dividendArr[i];
+            int count = 0;
+            if (temp >= divisorArr[0]) {
+                count = temp / divisorArr[0];
+                temp -= count * divisorArr[0];
+            }
+            quotient.insert(0, count);
+            remainder[0] = temp;
+            remainderLen = 1;
+            for (int j = 1; j < divisorArr.length && j <= i; j++) {
+                temp = remainder[j] * BASE + dividendArr[i - j];
+                if (temp >= divisorArr[j]) {
+                    temp -= divisorArr[j];
+                } else {
+                    remainderLen = j + 1;
+                }
+                remainder[j] = temp;
+            }
+        }
+
+        StringBuilder result = new StringBuilder();
+        for (int i = remainderLen - 1; i >= 0; i--) {
+            result.append(remainder[i]);
+        }
+        
+        return quotient.toString();
+        
+    }
+    private int[] convertToBase(String num) {
+    int len = (num.length() + 3) / 4;
+    int[] arr = new int[len];
+    int index = 0;
+    for (int i = num.length(); i > 0; i -= 4) {
+        int endIndex = Math.max(i - 4, 0);
+        String sub = num.substring(endIndex, i);
+        if (!sub.isEmpty()) {
+            arr[index++] = Integer.parseInt(sub);
+        }
+    }
+    return arr;
+}
+    
+    public String divide4(BigNumber other) {
+        int counter = 0;
+        String[] result = new String[this.number.length()];
+        BigNumber temp = new BigNumber(this.number);
+        String[] digits = new String[this.number.length()];
+        for (int i = 0; i<this.number.length(); i++) {
+            digits[i] = this.number.charAt(i)+ "0".repeat(this.number.length()-1-i);
+        }
+        
+        for (int i = 0; i<this.number.length(); i++) {
+            BigNumber digit = new BigNumber(digits[i]);
+            System.out.println(digit.number + " digits");
+            while (true) {
+                if (digit.isNegative(other)) {
+                    System.out.println("now is negative");
+                    break;
+                }
+                else {
+                    counter++;
+                    digit.number = digit.subtract(other);
+                    System.out.println(digit.number + "   number");
+                }             
+            }
+            System.out.println(counter + "         counter");
+            result[i] = counter + "";
+            counter = 0;
+            
+        }
+        
+        for (int i = 0; i<this.number.length()-1; i++) {
+            result[i] = new BigNumber(result[i]).sum(new BigNumber(result[i+1]));
+        }
+        return result[this.number.length()-1];
+    }
+    
+    public String pow (int n) {
+        BigNumber pow = new BigNumber(n + "");
+        BigNumber firstNum = new BigNumber(this.number);
+        BigNumber secondNum;
+        int quotient = n/10;
+        int remaining = n%10;
+        if (n >= 10) {
+            for (int i = 1; i<10; i++) {
+                this.number = this.mult(firstNum);
+            }
+            secondNum = new BigNumber(this.number);
+            for (int i = 1; i<quotient; i++) {
+                this.number = this.mult(secondNum);
+            }
+            for (int i = 0; i<remaining; i++) {
+                this.number = this.mult(firstNum);
+            }
+            return this.number;
+        }
+        else if (n > 0 && n<10){
+            for (int i = 1; i<remaining; i++) {
+                this.number = this.mult(firstNum);
+            }
+            return this.number;
+        }
+        else {
+            return 0 + "";
+        }
+
+    }
+    
+    public String shiftR(int n) {
+        if (this.sign == 9) {
+            this.number = "-" + this.number;
+        }
+        
+        if (n > this.number.length()) {
+            return "n must be less than the number length !";
+        }
+        else if (n <this.number.length()){
+        this.number = this.number.substring(0,this.number.length()-n);
+        return this.number;
+        }
+        else {
+            return "0";
+        }
+        
+    }
+    public String shiftL(int n) {
+        this.number = this.number + "0".repeat(n);
+        if (this.sign == 9) {
+            this.number = "-" + this.number;
+        }
+        return this.number;
+    }
+    
+    public String inc() {
+        BigNumber inc = new BigNumber("-1");
+        this.number = this.subtract(inc);
+        return this.number;
+    }
+    public String dec() {
+        BigNumber dec = new BigNumber("1");
+        this.number = this.subtract(dec);
+        return this.number;
+        
+    }
 
     public static void main(String[] args) {
-        BigNumber bn = new BigNumber();
+        String s1 = input.nextLine();
+        String s2 = input.nextLine();
+        BigNumber num1 = new BigNumber(s1);
+        BigNumber num2= new BigNumber(s2);
         
-        // actions with big integer class methods !
+        //System.out.println(num1.sum(num2));
+        //System.out.println(num1.subtract(num2));
+        //System.out.println(num1.mult(num2));
+        //System.out.println(num1.shiftR(50));
+        //System.out.println(num1.isNegative(num2));
+        //System.out.println(num1.pow(100000));
+        System.out.println(num1.divide3(num2));
         
+        
+            
+        
+        BigInteger n1 = new BigInteger(s1);
+        BigInteger n2 = new BigInteger(s2);
+        
+        //System.out.println(n1.pow(100000));
         // == sum ==
-        System.out.println(num1.add(num2));
+        //System.out.println(n1.add(n2));
         // == minus ==
-        System.out.println(num1.subtract(num2));
+        //System.out.println(n1.subtract(n2));
         // == multiply ==
-        System.out.println(num1.multiply(num2));
+        //System.out.println(n1.multiply(n2));
         // == divide ==
-        System.out.println(num1.divide(num2));
+        //System.out.println(n1.divide(n2));
+        
         
         
         //sum second way
-        sum(num1,num2);
+        //System.out.println(sum(s1,s2));
         // == minus second way
-        minus(num1,num2);
+        //System.out.println(bn.subtract(s1));
         //multiply
-        //multiply(num1,num2);
-        multiplySecondWay(num1,num2);
+        //System.out.println(mult(s1,s2));
         //divide second way
-        divide(num1,num2);
+        //System.out.println(divide(s1,s2));
         
     }
     
